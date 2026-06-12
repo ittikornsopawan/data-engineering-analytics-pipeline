@@ -1,0 +1,8 @@
+numpy>=2.3
+pandas>=2.3.3
+matplotlib
+jupyterlab
+ipykernel
+sqlalchemy
+psycopg[binary]
+python-dotenv
