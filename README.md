@@ -10,18 +10,30 @@ Download Data: [File](https://www.kaggle.com/datasets/piterfm/fifa-football-worl
 
 ```text
 ├── README.md
-├── requirements.txt
-├── docker-compose.yml
-├── .env.example
 ├── data
 │   ├── fifa_ranking_2022-10-06.csv
 │   ├── fifa_ranking_2026-06-08.csv
 │   ├── matches_1930_2022.csv
 │   ├── schedule_2026.csv
 │   └── world_cup.csv
+├── docker-compose.yml
+├── main.py
 ├── notebook
+│   ├── 01_explore_matches.ipynb
+│   ├── 02_matches_statics.ipynb
+│   ├── 03_matches_all_time.ipynb
+│   ├── 04_matches_year_summary.ipynb
+│   ├── 05_matches_goals_summary.ipynb
+│   └── 06_team_rank_vs_winner.ipynb
 ├── output
+├── requirements.txt
 └── src
+    ├── __init__.py
+    ├── config.py
+    ├── database.py
+    ├── extract.py
+    ├── load.py
+    └── transform.py
 ```
 
 ## Step 1: Create Virtual Environment
@@ -224,48 +236,86 @@ df.info()
 df.isna().sum()
 ```
 
-## Step 8: Optional Source Code Structure
+## Step 8: Source Code Structure
 
-ถ้าต้องการแยก code ที่ใช้ซ้ำออกจาก notebook ให้สร้างไฟล์ใน `src`
+Project นี้แยก logic หลักออกจาก notebook เพื่อให้สามารถนำ code ไปใช้ซ้ำใน pipeline ได้
 
 ```text
 src
 ├── __init__.py
 ├── config.py
-├── data_loader.py
-└── display.py
+├── database.py
+├── extract.py
+├── load.py
+└── transform.py
 ```
 
-ตัวอย่างการใช้ใน notebook
+ความหมายของแต่ละไฟล์
 
-```python
-import sys
-from pathlib import Path
-
-PROJECT_ROOT = Path.cwd().parent
-sys.path.append(str(PROJECT_ROOT))
+```text
+config.py    เก็บ path และ environment configuration
+database.py  สร้าง database engine สำหรับเชื่อมต่อ PostgreSQL
+extract.py   อ่านข้อมูลจาก CSV
+transform.py แปลงข้อมูลและสร้าง analytical tables
+load.py      load DataFrame เข้า PostgreSQL
 ```
 
-```python
-from src.data_loader import load_matches
-from src.display import setup_display
+ตัวอย่างการ run pipeline
 
-setup_display()
-df = load_matches()
-df.head()
+```bash
+python main.py
 ```
 
 ## Current Learning Goal
 
-เป้าหมายแรกของ project นี้คือทำความเข้าใจข้อมูลจากไฟล์ `matches_1930_2022.csv` ก่อน จากนั้นค่อยต่อยอดเป็นการนำข้อมูลเข้า PostgreSQL และอ่านข้อมูลจาก database ด้วย Pandas
+เป้าหมายของ project นี้คือฝึก workflow พื้นฐานของ Data Engineering และ AI Engineer Foundation ผ่านข้อมูล FIFA World Cup ตั้งแต่การอ่าน raw CSV, วิเคราะห์ข้อมูลด้วย notebook, แปลงข้อมูลด้วย Pandas, load เข้า PostgreSQL และสร้าง visualization เบื้องต้น
 
-คำถามที่ต้องตอบให้ได้ในรอบแรก:
+สิ่งที่ project นี้ทำได้แล้ว:
 
-1. Dataset นี้มีกี่ rows และ columns
-2. มี column อะไรบ้าง
-3. มีข้อมูลตั้งแต่ปีไหนถึงปีไหน
-4. มีทีมทั้งหมดกี่ทีม
-5. column ไหนมี missing values บ้าง
-6. สามารถ start PostgreSQL ด้วย Docker ได้
-7. สามารถเชื่อมต่อ PostgreSQL จาก Python ได้
-8. สามารถ load CSV เข้า PostgreSQL ได้
+1. อ่านข้อมูลจาก `matches_1930_2022.csv` และ `world_cup.csv`
+2. สำรวจข้อมูลเบื้องต้นด้วย Jupyter Notebook
+3. แปลงข้อมูลจาก match-level เป็น team-level
+4. สร้าง summary table รายทีม รายปี และ all-time
+5. สร้าง match goals summary
+6. วิเคราะห์ ranking ของทีมเทียบกับทีมที่ได้แชมป์จริง
+7. จัดการ edge case ของ World Cup 1950 ที่ไม่มี Final match แบบปกติ
+8. สร้าง visualization สำหรับจำนวนแชมป์ของแต่ละประเทศ
+9. Load raw และ transformed tables เข้า PostgreSQL
+
+## Notebooks
+
+```text
+01_explore_matches.ipynb        สำรวจ dataset เบื้องต้น
+02_matches_statics.ipynb        วิเคราะห์ match statistics พื้นฐาน
+03_matches_all_time.ipynb       สร้าง team summary แบบ all-time
+04_matches_year_summary.ipynb   สร้าง summary รายปีของ World Cup
+05_matches_goals_summary.ipynb  สร้าง match goals summary
+06_team_performance.ipynb       วิเคราะห์ team champion
+```
+
+## Generated Tables
+
+ตารางหลักที่สร้างจาก pipeline / notebook:
+
+```text
+raw_matches
+team_matches
+team_summary_by_year
+team_summary_all_time
+world_cup_year_summary
+match_goals_summary
+team_ranking_by_year
+champion_count
+```
+
+## Project Scope
+
+Project นี้เป็น portfolio project สำหรับฝึกพื้นฐาน Data Engineering และ AI Engineer Foundation โดยเน้น:
+
+- Python data processing
+- Pandas transformation
+- PostgreSQL loading
+- Docker-based local database
+- Jupyter Notebook analysis
+- Matplotlib visualization
+- Data quality thinking and edge-case handling
